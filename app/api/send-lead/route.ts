@@ -42,7 +42,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Lead submission error", error);
+    if (error instanceof Error) {
+      console.error("Lead submission error", {
+        message: error.message,
+        name: error.name,
+        ...(typeof error === "object" && error !== null ? error : {}),
+      });
+    } else {
+      console.error("Lead submission error", error);
+    }
 
     return NextResponse.json(
       {

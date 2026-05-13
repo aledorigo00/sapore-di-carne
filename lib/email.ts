@@ -6,17 +6,34 @@ function getEnv(name: string) {
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
-  return value;
+  return value.trim();
 }
 
 export function createTransporter() {
+  const host = getEnv("SMTP_HOST");
+  const port = Number(getEnv("SMTP_PORT"));
+  const secure = getEnv("SMTP_SECURE") === "true";
+  const user = getEnv("SMTP_USER");
+  const pass = getEnv("SMTP_PASSWORD");
+  const authMethod = process.env.SMTP_AUTH_METHOD?.trim() || (host.includes("aruba.it") ? "LOGIN" : undefined);
+
   return nodemailer.createTransport({
-    host: getEnv("SMTP_HOST"),
-    port: Number(getEnv("SMTP_PORT")),
-    secure: getEnv("SMTP_SECURE") === "true",
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    authMethod,
+    name: process.env.SMTP_CLIENT_NAME?.trim() || "saporedicarne.it",
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 20_000,
     auth: {
-      user: getEnv("SMTP_USER"),
-      pass: getEnv("SMTP_PASSWORD"),
+      user,
+      pass,
+    },
+    tls: {
+      servername: host,
+      minVersion: "TLSv1.2",
     },
   });
 }
